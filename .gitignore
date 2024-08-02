@@ -1,0 +1,10 @@
+# dependencies
+/node_modules
+
+# custom
+*.example
+*.env
+*.test.*
+*.db
+*.out
+*.sh

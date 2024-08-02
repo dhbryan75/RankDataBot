@@ -1,0 +1,4 @@
+cd /home/ubuntu/RankDataBot/
+nohup node /home/ubuntu/RankDataBot/index.js >> /home/ubuntu/RankDataBot/result.out &
+
+# chmod 777 start.sh
