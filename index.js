@@ -120,6 +120,7 @@ const main = async() => {
 		}
 		await conn.commit();
 		console.log(`${tier} ${division} MATCH RECORDED`);
+		
 
 		// const [row] = await conn.query(selectRankgameById, [rankgameId]);
 		// console.log(row);
@@ -128,6 +129,7 @@ const main = async() => {
 		console.log(error);
 	} finally {
         if(conn) conn.release();
+        process.exit();
     }
 };
 
