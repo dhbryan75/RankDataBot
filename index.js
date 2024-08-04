@@ -2,12 +2,21 @@ import dotenv from 'dotenv';
 import fetch from "node-fetch";
 import mysql from "mysql2/promise";
 import { randomSelect } from './Functions.js';
-
-const selectRiotAccount = `SELECT 
-riotAccountId,
-gamename,
-tagline
-FROM RiotAccount`;
+import { 
+	msPerDay, 
+	msPerSecond, 
+	selectRankgameByMatchId, 
+	queue, 
+	tiers, 
+	leagueByTierUrl, 
+	summonerByIdUrl, 
+	matchIdsByPuuidUrl, 
+	matchByIdUrl, 
+	blueTeamId,
+	insertRankgame,
+	insertPlayer,
+	selectNewRankgame,
+} from './Constants.js';
 
 
 dotenv.config();
@@ -22,26 +31,84 @@ const pool = mysql.createPool({
 });
 
 
-const riotApiBaseUrl = "https://asia.api.riotgames.com";
-const accountPath = "riot/account/v1/accounts/by-riot-id";
-const matchByPuuidPath = "lol/match/v5/matches/by-puuid";
-
-
-const requestRiot = async(path, params) => {
-	const url = `${riotApiBaseUrl}/${path}?api_key=${riotApiKey}&${params}`;
-	const res = await fetch(url);
+const requestRiot = async(url, params) => {
+	const res = await fetch(`${url}?api_key=${riotApiKey}&${params}`);
 	return await res.json();
 };
 
 const main = async() => {
 	try {
         const conn = await pool.getConnection();
-		const [rows] = await conn.query(selectRiotAccount);
-		const { gamename, tagline } = randomSelect(rows);
-		const { puuid } = await requestRiot(`${accountPath}/${gamename}/${tagline}`);
-		console.log(puuid);
-		const matchIds = await requestRiot(`${matchByPuuidPath}/${puuid}/ids`, `type=ranked`);
-		console.log(matchIds);
+		const { tier, division } = randomSelect(tiers);
+		const entries = await requestRiot(`${leagueByTierUrl}/${queue}/${tier}/${division}`);
+		const entry = randomSelect(entries);
+		const { summonerId } = entry;
+		const summoner = await requestRiot(`${summonerByIdUrl}/${summonerId}`);
+		const { puuid } = summoner;
+		const secondBefore30Days = Math.round((Date.now() - 30 * msPerDay) / msPerSecond);
+		const matchIds = await requestRiot(`${matchIdsByPuuidUrl}/${puuid}/ids`, `startTime=${secondBefore30Days}&type=ranked`);
+		let matchId;
+		for(matchId of matchIds) {
+			const [rows] = await conn.query(selectRankgameByMatchId, [matchId]);
+			if(rows.length === 0) {
+				break;
+			}
+		}
+		const match = await requestRiot(`${matchByIdUrl}/${matchId}`);
+		const { info } = match;
+		const { participants, teams, gameDuration, gameVersion } = info;
+		let isBlueWin = true;
+		teams.forEach((team) => {
+			const { teamId, win } = team;
+			if(teamId === blueTeamId) {
+				isBlueWin = win;
+			}
+		});
+		const [result] = await conn.query(insertRankgame, [matchId, gameVersion, isBlueWin ? 1 : 0, tier, division, gameDuration]);
+		const rankgameId = result.insertId;
+		for(const participant of participants) {
+			const { 
+				teamId, 
+				teamPosition, 
+				riotIdGameName, 
+				riotIdTagline, 
+				puuid,
+				goldEarned,
+				championId,
+				deaths,
+				kills,
+				assists,
+				totalMinionsKilled,
+				neutralMinionsKilled,
+				totalDamageDealtToChampions,
+				summoner1Id,
+				summoner2Id,
+				champLevel,
+			} = participant;
+
+			await conn.query(insertPlayer, [
+				rankgameId,
+				riotIdGameName,
+				riotIdTagline,
+				puuid,
+				teamId === blueTeamId ? 1 : 0,
+				teamPosition, 
+				championId,
+				summoner1Id,
+				summoner2Id,
+				kills,
+				deaths,
+				assists,
+				champLevel,
+				totalMinionsKilled + neutralMinionsKilled,
+				goldEarned,
+				totalDamageDealtToChampions
+			]);
+		}
+		console.log("match recorded");
+		
+		// const [row] = await conn.query(selectNewRankgame, [1]);
+		// console.log(row);
 	} catch (error) {
 		console.log(error);
 	}
