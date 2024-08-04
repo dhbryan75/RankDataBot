@@ -8,16 +8,38 @@ export const msPerDay = hourPerDay * msPerHour;
 
 
 // QUERIES
-export const selectRankgameByMatchId = `SELECT 
-rankgameId,
-riotMatchId,
-version,
-isBlueWin,
-tier,
-division,
-duration
+export const selectRankgameIdByMatchId = `SELECT 
+rankgameId
 FROM Rankgame
 WHERE riotMatchId = ?`;
+
+export const selectRankgameById = `SELECT 
+r.rankgameId rankgameId,
+r.riotMatchId riotMatchId,
+r.version version,
+r.isBlueWin isBlueWin,
+r.tier tier,
+r.division division,
+r.duration duration,
+p.playerId playerId,
+p.gamename gamename,
+p.tagline tagline,
+p.riotPuuid riotPuuid,
+p.isBlue isBlue,
+p.position position,
+p.championId championId,
+p.spell0Id spell0Id,
+p.spell1Id spell1Id,
+p.kill \`kill\`,
+p.death death,
+p.assist assist,
+p.level level,
+p.cs cs,
+p.gold gold,
+p.deal deal
+FROM Rankgame r
+JOIN Player p ON r.rankgameId = p.rankgameId
+WHERE r.rankgameId = ?`;
 
 export const selectNewRankgame = `SELECT 
 r.rankgameId rankgameId,
@@ -45,7 +67,8 @@ p.gold gold,
 p.deal deal
 FROM Rankgame r
 JOIN Player p ON r.rankgameId = p.rankgameId
-WHERE r.rankgameId NOT IN (SELECT rankgameId FROM UserRankgame WHERE userId = ?)`;
+WHERE r.rankgameId NOT IN (SELECT rankgameId FROM UserRankgame WHERE userId = ?)
+ORDER BY r.rankgameId, RAND() LIMIT 10;`;
 
 export const insertRankgame = `INSERT INTO Rankgame(riotMatchId, version, isBlueWin, tier, division, duration)
 VALUES(?, ?, ?, ?, ?, ?)`;

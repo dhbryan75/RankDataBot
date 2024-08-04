@@ -5,7 +5,7 @@ import { randomSelect } from './Functions.js';
 import { 
 	msPerDay, 
 	msPerSecond, 
-	selectRankgameByMatchId, 
+	selectRankgameIdByMatchId, 
 	queue, 
 	tiers, 
 	leagueByTierUrl, 
@@ -16,8 +16,11 @@ import {
 	insertRankgame,
 	insertPlayer,
 	selectNewRankgame,
+	selectRankgameById,
+	secondPerMinute,
 } from './Constants.js';
 
+let conn;
 
 dotenv.config();
 const riotApiKey = process.env.RIOT_API_KEY;
@@ -38,7 +41,7 @@ const requestRiot = async(url, params) => {
 
 const main = async() => {
 	try {
-        const conn = await pool.getConnection();
+        conn = await pool.getConnection();
 		const { tier, division } = randomSelect(tiers);
 		const entries = await requestRiot(`${leagueByTierUrl}/${queue}/${tier}/${division}`);
 		const entry = randomSelect(entries);
@@ -49,14 +52,23 @@ const main = async() => {
 		const matchIds = await requestRiot(`${matchIdsByPuuidUrl}/${puuid}/ids`, `startTime=${secondBefore30Days}&type=ranked`);
 		let matchId;
 		for(matchId of matchIds) {
-			const [rows] = await conn.query(selectRankgameByMatchId, [matchId]);
+			const [rows] = await conn.query(selectRankgameIdByMatchId, [matchId]);
 			if(rows.length === 0) {
 				break;
 			}
 		}
+		if(!matchId) {
+			throw("NO DATA");
+		}
 		const match = await requestRiot(`${matchByIdUrl}/${matchId}`);
 		const { info } = match;
 		const { participants, teams, gameDuration, gameVersion } = info;
+		if(participants.length !== 10) {
+			throw("CORRUPTED DATA");
+		}
+		if(gameDuration < 15 * secondPerMinute) {
+			throw("TOO SHORT GAME");
+		}
 		let isBlueWin = true;
 		teams.forEach((team) => {
 			const { teamId, win } = team;
@@ -64,6 +76,7 @@ const main = async() => {
 				isBlueWin = win;
 			}
 		});
+		await conn.beginTransaction();
 		const [result] = await conn.query(insertRankgame, [matchId, gameVersion, isBlueWin ? 1 : 0, tier, division, gameDuration]);
 		const rankgameId = result.insertId;
 		for(const participant of participants) {
@@ -105,13 +118,17 @@ const main = async() => {
 				totalDamageDealtToChampions
 			]);
 		}
-		console.log("match recorded");
-		
-		// const [row] = await conn.query(selectNewRankgame, [1]);
+		await conn.commit();
+		console.log(`${tier} ${division} MATCH RECORDED`);
+
+		// const [row] = await conn.query(selectRankgameById, [rankgameId]);
 		// console.log(row);
 	} catch (error) {
+		if(conn) await conn.rollback();
 		console.log(error);
-	}
+	} finally {
+        if(conn) conn.release();
+    }
 };
 
 main();
