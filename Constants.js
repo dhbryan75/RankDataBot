@@ -21,6 +21,7 @@ r.isBlueWin isBlueWin,
 r.tier tier,
 r.division division,
 r.duration duration,
+r.createdAt createdAt,
 p.playerId playerId,
 p.gamename gamename,
 p.tagline tagline,
@@ -49,6 +50,7 @@ r.isBlueWin isBlueWin,
 r.tier tier,
 r.division division,
 r.duration duration,
+r.createdAt createdAt,
 p.playerId playerId,
 p.gamename gamename,
 p.tagline tagline,
@@ -68,6 +70,7 @@ p.deal deal
 FROM Rankgame r
 JOIN Player p ON r.rankgameId = p.rankgameId
 WHERE r.rankgameId NOT IN (SELECT rankgameId FROM UserRankgame WHERE userId = ?)
+AND TIMESTAMPDIFF(DAY, r.createdAt, NOW()) < 30
 ORDER BY r.rankgameId, RAND() LIMIT 10;`;
 
 export const insertRankgame = `INSERT INTO Rankgame(riotMatchId, version, isBlueWin, tier, division, duration)
