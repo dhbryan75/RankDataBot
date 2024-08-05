@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import fetch from "node-fetch";
 import mysql from "mysql2/promise";
-import { randomSelect } from './Functions.js';
+import { randomSelect, dateToStringDetail } from './Functions.js';
 import { 
 	msPerDay, 
 	msPerSecond, 
@@ -119,7 +119,7 @@ const main = async() => {
 			]);
 		}
 		await conn.commit();
-		console.log(`${tier} ${division} MATCH RECORDED`);
+		console.log(`${dateToStringDetail(new Date())}: ${tier} ${division} MATCH RECORDED`);
 		
 
 		// const [row] = await conn.query(selectRankgameById, [rankgameId]);
