@@ -88,7 +88,43 @@ export const tiers = [
 		division: "I"
 	},
 	{
+		tier: "CHALLENGER",
+		division: "I"
+	},
+	{
+		tier: "CHALLENGER",
+		division: "I"
+	},
+	{
+		tier: "CHALLENGER",
+		division: "I"
+	},
+	{
 		tier: "GRANDMASTER",
+		division: "I"
+	},
+	{
+		tier: "GRANDMASTER",
+		division: "I"
+	},
+	{
+		tier: "GRANDMASTER",
+		division: "I"
+	},
+	{
+		tier: "GRANDMASTER",
+		division: "I"
+	},
+	{
+		tier: "MASTER",
+		division: "I"
+	},
+	{
+		tier: "MASTER",
+		division: "I"
+	},
+	{
+		tier: "MASTER",
 		division: "I"
 	},
 	{

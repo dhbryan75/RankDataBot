@@ -119,7 +119,8 @@ const main = async() => {
 			]);
 		}
 		await conn.commit();
-		console.log(`${dateToStringDetail(new Date())}: ${tier} ${division} MATCH RECORDED`);
+		const isUpperTier = tier === "CHALLENGER" || tier === "GRANDMASTER" || tier === "MASTER";
+		console.log(`${dateToStringDetail(new Date())}: ${tier} ${isUpperTier ? "" : division} MATCH RECORDED`);
 		
 
 		// const [row] = await conn.query(selectRankgameById, [rankgameId]);
