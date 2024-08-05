@@ -175,6 +175,22 @@ export const tiers = [
 		tier: "BRONZE",
 		division: "IV"
 	},
+	{
+		tier: "IRON",
+		division: "I"
+	},
+	{
+		tier: "IRON",
+		division: "II"
+	},
+	{
+		tier: "IRON",
+		division: "III"
+	},
+	{
+		tier: "IRON",
+		division: "IV"
+	},
 ];
 
 export const leagueByTierUrl = "https://kr.api.riotgames.com/lol/league-exp/v4/entries";
