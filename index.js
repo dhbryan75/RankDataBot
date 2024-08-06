@@ -15,9 +15,8 @@ import {
 	blueTeamId,
 	insertRankgame,
 	insertPlayer,
-	selectNewRankgame,
-	selectRankgameById,
 	secondPerMinute,
+	localtimeOffset,
 } from './Constants.js';
 
 let conn;
@@ -62,7 +61,7 @@ const main = async() => {
 		}
 		const match = await requestRiot(`${matchByIdUrl}/${matchId}`);
 		const { info } = match;
-		const { participants, teams, gameDuration, gameVersion } = info;
+		const { participants, teams, gameDuration, gameStartTimestamp, gameVersion } = info;
 		if(participants.length !== 10) {
 			throw("CORRUPTED DATA");
 		}
@@ -77,7 +76,8 @@ const main = async() => {
 			}
 		});
 		await conn.beginTransaction();
-		const [result] = await conn.query(insertRankgame, [matchId, gameVersion, isBlueWin ? 1 : 0, tier, division, gameDuration]);
+		const startedAt = new Date(gameStartTimestamp + localtimeOffset).toISOString().slice(0, 19).replace('T', ' ');
+		const [result] = await conn.query(insertRankgame, [matchId, gameVersion, isBlueWin ? 1 : 0, tier, division, gameDuration, startedAt]);
 		const rankgameId = result.insertId;
 		for(const participant of participants) {
 			const { 
@@ -120,7 +120,7 @@ const main = async() => {
 		}
 		await conn.commit();
 		const isUpperTier = tier === "CHALLENGER" || tier === "GRANDMASTER" || tier === "MASTER";
-		console.log(`${dateToStringDetail(new Date())}: ${tier} ${isUpperTier ? "" : division} MATCH RECORDED`);
+		console.log(`${dateToStringDetail(new Date())}: ${tier}${isUpperTier ? "" : " " + division}`);
 		
 
 		// const [row] = await conn.query(selectRankgameById, [rankgameId]);
