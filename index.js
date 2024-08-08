@@ -69,15 +69,43 @@ const main = async() => {
 			throw("TOO SHORT GAME");
 		}
 		let isBlueWin = true;
+		let blueDragonKill, blueHordeKill, blueHeraldKill, blueBaronKill, redDragonKill, redHordeKill, redHeraldKill, redBaronKill;
 		teams.forEach((team) => {
-			const { teamId, win } = team;
+			const { teamId, win, objectives } = team;
+			const { baron, dragon, horde, riftHerald } = objectives;
 			if(teamId === blueTeamId) {
 				isBlueWin = win;
+				blueBaronKill = baron.kills;
+				blueDragonKill = dragon.kills;
+				blueHordeKill = horde.kills;
+				blueHeraldKill = riftHerald.kills;
+			}
+			else {
+				redBaronKill = baron.kills;
+				redDragonKill = dragon.kills;
+				redHordeKill = horde.kills;
+				redHeraldKill = riftHerald.kills;
 			}
 		});
 		await conn.beginTransaction();
 		const startedAt = new Date(gameStartTimestamp + localtimeOffset).toISOString().slice(0, 19).replace('T', ' ');
-		const [result] = await conn.query(insertRankgame, [matchId, gameVersion, isBlueWin ? 1 : 0, tier, division, gameDuration, startedAt]);
+		const [result] = await conn.query(insertRankgame, [
+			matchId, 
+			gameVersion, 
+			isBlueWin ? 1 : 0, 
+			tier, 
+			division, 
+			gameDuration, 
+			blueDragonKill, 
+			blueHordeKill, 
+			blueHeraldKill, 
+			blueBaronKill, 
+			redDragonKill, 
+			redHordeKill, 
+			redHeraldKill, 
+			redBaronKill,
+			startedAt,
+		]);
 		const rankgameId = result.insertId;
 		for(const participant of participants) {
 			const { 

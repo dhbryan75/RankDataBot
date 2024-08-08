@@ -15,38 +15,23 @@ rankgameId
 FROM Rankgame
 WHERE riotMatchId = ?`;
 
-export const selectRankgameById = `SELECT 
-r.rankgameId rankgameId,
-r.riotMatchId riotMatchId,
-r.version version,
-r.isBlueWin isBlueWin,
-r.tier tier,
-r.division division,
-r.duration duration,
-r.startedAt startedAt,
-r.createdAt createdAt,
-p.playerId playerId,
-p.gamename gamename,
-p.tagline tagline,
-p.riotPuuid riotPuuid,
-p.isBlue isBlue,
-p.position position,
-p.championId championId,
-p.spell0Id spell0Id,
-p.spell1Id spell1Id,
-p.kill \`kill\`,
-p.death death,
-p.assist assist,
-p.level level,
-p.cs cs,
-p.gold gold,
-p.deal deal
-FROM Rankgame r
-JOIN Player p ON r.rankgameId = p.rankgameId
-WHERE r.rankgameId = ?`;
-
-export const insertRankgame = `INSERT INTO Rankgame(riotMatchId, version, isBlueWin, tier, division, duration, startedAt)
-VALUES(?, ?, ?, ?, ?, ?, ?)`;
+export const insertRankgame = `INSERT INTO Rankgame(
+riotMatchId, 
+version, 
+isBlueWin, 
+tier, 
+division, 
+duration, 
+blueDragonKill, 
+blueHordeKill, 
+blueHeraldKill, 
+blueBaronKill, 
+redDragonKill, 
+redHordeKill, 
+redHeraldKill, 
+redBaronKill, 
+startedAt)
+VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
 export const insertPlayer = `INSERT INTO Player(rankgameId, gamename, tagline, riotPuuid, isBlue, position, championId, spell0Id, spell1Id, \`kill\`, death, assist, level, cs, gold, deal)
 VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
