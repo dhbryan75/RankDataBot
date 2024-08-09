@@ -65,7 +65,7 @@ const main = async() => {
 		if(participants.length !== 10) {
 			throw("CORRUPTED DATA");
 		}
-		if(gameDuration < 15 * secondPerMinute) {
+		if(gameDuration < 8 * secondPerMinute) {
 			throw("TOO SHORT GAME");
 		}
 		let isBlueWin = true;
